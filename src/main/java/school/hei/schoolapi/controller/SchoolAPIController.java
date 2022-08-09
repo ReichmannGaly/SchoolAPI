@@ -1,59 +1,62 @@
 package school.hei.schoolapi.controller;
 
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.hei.schoolapi.model.Groups;
 import school.hei.schoolapi.repository.GroupRepository;
 import school.hei.schoolapi.repository.StudentRepository;
 import school.hei.schoolapi.model.Student;
+import school.hei.schoolapi.service.StudentService;
+
 import java.util.Optional;
 
 import java.util.Collections;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 public class SchoolAPIController {
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
+
     private GroupRepository groupRepository;
 
-    @GetMapping({"/students/{id}", "/students"})
-    public List<Student> findAllStudents(@PathVariable(required = false) Long id){
-        if (id == null){
-            return studentRepository.findAll();
-        }
-        else{
-            return studentRepository.findAllById(Collections.singleton(id));
-        }
+    private StudentService service;
 
+    @GetMapping( "/students")
+    public List<Student> findAllStudents(){
+        return service.findAll();
+    }
+
+    @GetMapping("/students/{id}")
+    public Optional<Student> findById(@PathVariable Long id){
+        return service.findById(id);
+    }
+
+    @GetMapping("/students/search")
+    public List<Student> findByName(@RequestParam(name = "query") String name){
+        return service.findByName(name);
     }
 
     @PostMapping("/students")
-    public List<Student> create(@RequestBody Student s){
-        studentRepository.save(s);
-        return studentRepository.findAll();
+    public Student create(@RequestBody Student s){
+        return service.save(s);
     }
 
     @PutMapping("/students/{id}")
-    public List<Student> put(@PathVariable Long id,@RequestBody Student s){
-        Optional<Student> studentData = studentRepository.findById(id);
-        if (studentData.isPresent()) {
-            Student student = studentData.get();
-            student.setName(s.getName());
-            student.setGroup(s.getGroup());
-            studentRepository.save(student);
-            return studentRepository.findAll();
-        } else {
-            return null;
-        }
+    public Student put(@PathVariable Long id,@RequestBody Student s){
+        return service.updateAll(id,s);
+    }
+
+    @PatchMapping("/students")
+    public Student updateName(
+            @RequestParam(name = "id") Long id,
+            @RequestParam(name = "newName") String newName){
+            return service.updateName(id,newName);
     }
 
     @DeleteMapping("/students/{id}")
     public void delete(@PathVariable Long id){
-        studentRepository.deleteById(id);
+        service.deleteById(id);
     }
 
     @GetMapping("/groups")
